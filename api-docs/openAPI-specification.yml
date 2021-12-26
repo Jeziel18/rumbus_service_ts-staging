@@ -1,0 +1,3602 @@
+openapi: 3.0.1
+info:
+  version: "1.0.0"
+  title: RUMbus API
+  description: >-
+    RUMbus is a system to provide real-time information on the location of
+    buses, as well as estimated arrival times at stops for the transportation
+    service of the University of Puerto Rico at Mayaguez (UPRM).
+
+tags:
+  - name: Announcements
+  - name: Devices
+  - name: Drivers
+  - name: Routes
+  - name: Stops
+  - name: Trips
+  - name: Users
+  - name: Vehicles
+
+paths:
+  /announcements/search:
+    get:
+      tags:
+        - Announcements
+      summary: Search for announcements with the specified parameters
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: string
+          example: Announcement id
+        - name: expire_at
+          in: query
+          schema:
+            type: string
+          example: Expiration date of the announcement
+        - name: headline
+          in: query
+          schema:
+            type: string
+          example: Announcement headline
+        - name: content
+          in: query
+          schema:
+            type: string
+          example: Announcement content
+        - name: user_id
+          in: query
+          schema:
+            type: string
+          example: ID of the user that created the announcement
+        - name: skip
+          in: query
+          schema:
+            type: string
+          example: Parameter for pagination
+        - name: limit
+          in: query
+          schema:
+            type: string
+          example: Parameter for pagination
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    user_id:
+                      type: string
+                    expire_at:
+                      type: string
+                    headline:
+                      type: string
+                    content:
+                      type: string
+                    created_on:
+                      type: string
+                    updated_on:
+                      type: string
+              examples:
+                '/announcements/search?headline=Out of Service':
+                  value: >-
+                    [{"id":"2c584b22-cc58-4f7b-9871-32fe4b7f698b","user_id":"f398fece-a30a-4004-bdd7-1d559db7cbcb","headline":"Out
+                    of
+                    Service","content":"content","expire_at":"2021-03-21T00:27:10.000Z","updated_on":"2020-07-03T04:00:29.000Z","created_on":"2020-07-03T04:00:29.000Z"}]
+        '500':
+          $ref: '#/components/responses/500'
+  /announcements:
+    get:
+      tags:
+        - Announcements
+      summary: Get all announcements
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    user_id:
+                      type: string
+                    expire_at:
+                      type: string
+                    headline:
+                      type: string
+                    content:
+                      type: string
+                    created_on:
+                      type: string
+                    updated_on:
+                      type: string
+              examples:
+                '0':
+                  value: >-
+                    [{"id":"ab6f1863-d53f-44ab-91e0-d741cbbe49d0","user_id":"418e5cd2-074c-4d1d-b53e-6cd6d7267b04","headline":"Test
+                    headline","content":"This is the
+                    content","expire_at":"2021-01-21T00:27:10.000Z","updated_on":"2020-06-28T22:50:19.000Z","created_on":"2020-06-28T22:50:19.000Z"}]
+        '500':
+          $ref: '#/components/responses/500'
+
+    post:
+      summary: Create announcement
+      tags:
+        - Announcements
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, expire_at, headline, content]
+              properties:
+                user_id:
+                  type: string
+                expire_at:
+                  type: string
+                headline:
+                  type: string
+                content:
+                  type: string
+            examples:
+              '0':
+                value: |-
+                  {
+                      "user_id": "418e5cd2-074c-4d1d-b53e-6cd6d7267b04",
+                      "content": "This is the content",
+                      "headline": "Test headline",
+                      "expire_at": "2021-01-21 00:27:10"
+                  }
+              '1':
+                value: |-
+                  {
+                      "content": "This is the content",
+                      "headline": "Test headline",
+                      "expire_at": "2021-01-21 00:27:10"
+                  }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+              examples:
+                '0':
+                  value: '"ab6f1863-d53f-44ab-91e0-d741cbbe49d0"'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Missing required param:
+                    user_id"}
+        '500':
+          $ref: '#/components/responses/500'
+  /announcements/{announcement_id}:
+    put:
+      tags:
+        - Announcements
+      parameters:
+        - in: path
+          name: announcement_id
+          schema:
+            type: string
+          required: true
+          description: ID of the announcement
+      summary: Update announcement by its id
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                expire_at:
+                  type: string
+                headline:
+                  type: string
+                content:
+                  type: string
+            examples:
+              '0':
+                value: |-
+                  {
+                      "headline": "Updated headline"
+                  }
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '500':
+          $ref: '#/components/responses/500'
+    delete:
+      tags:
+        - Announcements
+      parameters:
+        - in: path
+          name: announcement_id
+          schema:
+            type: string
+          required: true
+          description: ID of the announcement
+      summary: Delete announcement by its id
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '500':
+          $ref: '#/components/responses/500'
+    get:
+      summary: Get announcement by its id
+      tags:
+        - Announcements
+      parameters:
+        - in: path
+          name: announcement_id
+          schema:
+            type: string
+          required: true
+          description: ID of the announcement
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  user_id:
+                    type: string
+                  headline:
+                    type: string
+                  expire_at:
+                    type: string
+                  content:
+                    type: string
+                  updated_on:
+                    type: string
+                  created_on:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"id":"ab6f1863-d53f-44ab-91e0-d741cbbe49d0","user_id":"418e5cd2-074c-4d1d-b53e-6cd6d7267b04","headline":"Test
+                    headline","content":"This is the
+                    content","expire_at":"2021-01-21T00:27:10.000Z","updated_on":"2020-06-28T22:50:19.000Z","created_on":"2020-06-28T22:50:19.000Z"}
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"NotFound","message":"Announcement with id:
+                    ab6f1863-d53f-44ab-91e0-d741cbbe49d not found"}
+        '500':
+          $ref: '#/components/responses/500'
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Get all users
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    id:
+                      type: string
+                    full_name:
+                      type: string
+                    email:
+                      type: string
+                    created_on:
+                      type: string
+                    updated_on:
+                      type: string
+              examples:
+                '0':
+                  value: >-
+                    [{"id":"ee4c7483-504c-4ca6-80ff-453f4bfdf9ff","full_name":"John
+                    Doe","email":"john.doe@test.com","updated_on":"2020-05-25T23:39:04.000Z","created_on":"2020-05-25T23:39:04.000Z"}]
+        '500':
+          $ref: '#/components/responses/500'
+    post:
+      tags:
+        - Users
+      summary: Create user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, full_name]
+              properties:
+                full_name:
+                  type: string
+                email:
+                  type: string
+            examples:
+              '0':
+                value: |-
+                  {
+                      "full_name": "John Doe",
+                      "email": "john.doe@test.com"
+                  }
+              '1':
+                value: |-
+                  {
+                      "full_name": "John Doe"
+                  }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: string
+              examples:
+                '0':
+                  value: '"ee4c7483-504c-4ca6-80ff-453f4bfdf9ff"'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Missing required param:
+                    email"}
+        '500':
+          $ref: '#/components/responses/500'
+  /users/{user_id}:
+    put:
+      tags:
+        - Users
+      summary: Update user by its id
+      parameters:
+        - in: path
+          name: user_id
+          schema:
+            type: string
+          required: true
+          description: ID of the user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                full_name:
+                  type: string
+                email:
+                  type: string
+            examples:
+              '0':
+                value: |-
+                  {
+                      "full_name": "John Test"
+                  }
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '500':
+          $ref: '#/components/responses/500'
+    delete:
+      tags:
+        - Users
+      summary: Delete user by its id
+      parameters:
+        - in: path
+          name: user_id
+          schema:
+            type: string
+          required: true
+          description: ID of the user
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '500':
+          $ref: '#/components/responses/500'
+    get:
+      tags:
+        - Users
+      summary: Get user by its id
+      parameters:
+        - in: path
+          name: user_id
+          schema:
+            type: string
+          required: true
+          description: ID of the user
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  full_name:
+                    type: string
+                  email:
+                    type: string
+                  updated_on:
+                    type: string
+                  created_on:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"id":"ee4c7483-504c-4ca6-80ff-453f4bfdf9ff","full_name":"John
+                    Doe","email":"john.doe@test.com","updated_on":"2020-05-25T23:39:04.000Z","created_on":"2020-05-25T23:39:04.000Z"}
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"NotFound","message":"User with id:
+                    ee4c7483-504c-4ca6-80ff-453f4bfdf9fa not found"}
+        '500':
+          $ref: '#/components/responses/500'
+  /users/search:
+    get:
+      tags:
+        - Users
+      summary: Search for users with the specified parameters
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: string
+          example: User id
+        - name: full_name
+          in: query
+          schema:
+            type: string
+          example: User full name
+        - name: email
+          in: query
+          schema:
+            type: string
+          example: User email
+        - name: skip
+          in: query
+          schema:
+            type: string
+          example: Parameter for pagination
+        - name: limit
+          in: query
+          schema:
+            type: string
+          example: Parameter for pagination
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    id:
+                      type: string
+                    full_name:
+                      type: string
+                    email:
+                      type: string
+                    created_on:
+                      type: string
+                    updated_on:
+                      type: string
+              examples:
+                '/users/search?email=john.doe@test.com':
+                  value: >-
+                    [{"id":"f398fece-a30a-4004-bdd7-1d559db7cbcb","full_name":"John
+                    Doe","email":"john.doe@test.com","updated_on":"2020-07-03T03:58:16.000Z","created_on":"2020-07-03T03:58:16.000Z"}]
+        '500':
+          $ref: '#/components/responses/500'
+  /trips/{trip_id}/history:
+    get:
+      tags:
+        - Trips
+      summary: Get trip history
+      parameters:
+        - in: path
+          name: trip_id
+          schema:
+            type: string
+          required: true
+          description: ID of the trip
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    trip_id:
+                      type: string
+                    geopoints:
+                      type: array
+                      items:
+                        properties:
+                          accuracy:
+                            type: integer
+                          lon:
+                            type: integer
+                          lat:
+                            type: integer
+                          bearing:
+                            type: integer
+                          timestamp:
+                            type: integer
+              examples:
+                'OK':
+                  value: >-
+                    [{"trip_id":"61b2cfca-bbf7-4d8a-9110-f01a0cdaa1be","geopoints":[{"accuracy":3,"lon":2,"lat":1,"bearing":4,"timestamp":0}]}]
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                'Missing ID':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                'Not Found':
+                  value: >-
+                    {"code":"NotFound","message":"Trip with id:
+                    61b2cfca-bbf7-4d8a-9110-f01a0cdaa1b not found"}
+        '500':
+          $ref: '#/components/responses/500'
+    post:
+      tags:
+        - Trips
+      summary: Create trip history
+      parameters:
+        - in: path
+          name: trip_id
+          schema:
+            type: string
+          required: true
+          description: ID of the trip
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [geopoints]
+              properties:
+                geopoints:
+                  type: array
+                  items:
+                    type: object
+                    required: [bearing, accuracy, lon, lat, timestamp]
+                    properties:
+                      bearing:
+                        type: integer
+                      accuracy:
+                        type: integer
+                      lon:
+                        type: integer
+                      lat:
+                        type: integer
+                      timestamp:
+                        type: integer
+            examples:
+              'Body':
+                value: |-
+                  {
+                      "geopoints": [
+                          {
+                          "lat": 1,
+                          "lon": 2,
+                          "timestamp": 0,
+                          "accuracy": 3,
+                          "bearing": 4
+                          }
+                      ]
+                  }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+              examples:
+                'Created':
+                  value: '{"message":"Trip history was successfully created!"}'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                'Missing ID':
+                  value: '{"code":"BadRequest","message":"Need to provide a trip ID."}'
+                'Missing bearing':
+                  value: >-
+                    {"code":"BadRequest","message":"Missing required param:
+                    bearing"}
+                'Missing geopoints':
+                  value: >-
+                    {"code":"BadRequest","message":"Missing required param:
+                    geopoints"}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                'Not Found':
+                  value: >-
+                    {"code":"NotFound","message":"Trip with id:
+                    4de277ac-f535-46f2-8773-4202a58c not found"}
+        '500':
+          $ref: '#/components/responses/500'
+  /trips/search:
+    get:
+      tags:
+        - Trips
+      summary: Search trips
+      description: If no parameter is specified it returns all trips without filtering
+      parameters:
+        - name: public
+          in: query
+          schema:
+            type: string
+          description: Filter by public or administrative (0 or 1)
+        - name: active
+          in: query
+          schema:
+            type: string
+          description: Filter by active or non active trips (0 or 1)
+        - name: skip
+          in: query
+          schema:
+            type: string
+          description: Parameter for pagination
+        - name: limit
+          in: query
+          schema:
+            type: string
+          description: Parameter for pagination
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    id:
+                      type: string
+                    trip_number:
+                      type: integer
+                    property_number:
+                      type: integer
+                    departure_time:
+                      type: string
+                    full_name:
+                      type: string
+                    public:
+                      type: boolean
+                    active:
+                      type: boolean
+              examples:
+                '0':
+                  value: >-
+                    [{"id":"4de277ac-f535-46f2-8773-4202a58cb461","trip_number":1,"departure_time":"2020-02-03T22:42:45.000Z","property_number":24,"full_name":"Test
+                    John","public":1,"active":0},{"id":"badfea2b-5ffe-4977-8f44-6c335b9bb770","trip_number":2,"departure_time":"2020-02-03T22:42:45.000Z","property_number":24,"full_name":"Test
+                    John","public":0,"active":1}]
+        '500':
+          $ref: '#/components/responses/500'
+  /trips:
+    post:
+      tags:
+        - Trips
+      summary: Create trip
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [trip_number, driver_id, user_id, purpose, vehicle_id, departure_time, faculty, applicant, public]
+              properties:
+                trip_number:
+                  type: integer
+                driver_id:
+                  type: string
+                route_id:
+                  type: string
+                public:
+                  type: boolean
+                user_id:
+                  type: string
+                purpose:
+                  type: string
+                destination:
+                  type: string
+                type:
+                  type: string
+                vehicle_id:
+                  type: string
+                departure_time:
+                  type: string
+                applicant:
+                  type: string
+                faculty:
+                  type: string
+            examples:
+              'Public Trip':
+                value: "{ \r\n  \"trip_number\": 1,\r\n  \"driver_id\": \"abc123\",\r\n  \"vehicle_id\": \"abc123\",\r\n  \"user_id\": \"abc123\",\r\n  \"route_id\": \"abc123\",\r\n  \"public\": 1,\r\n  \"applicant\": \"John\",\r\n  \"faculty\": \"Some Faculty\",\r\n  \"purpose\": \"Life has no purpose\",\r\n  \"departure_time\": \"2020-02-03 22:42:45\"\r\n  }"
+              'Administrative Trip':
+                value: "{ \r\n  \"trip_number\": 1,\r\n  \"driver_id\": \"abc123\",\r\n  \"vehicle_id\": \"abc123\",\r\n  \"user_id\": \"abc123\",\r\n  \"public\": 0,\r\n  \"applicant\": \"John\",\r\n  \"faculty\": \"Some Faculty\",\r\n  \"purpose\": \"Life has no purpose\",\r\n  \"departure_time\": \"2020-02-03 22:42:45\"\r\n  \"destination\": \"San Juan\",\r\n  \"type\": \"Academico\"\r\n}"
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: string
+              examples:
+                '0':
+                  value: '"4de277ac-f535-46f2-8773-4202a58cb461"'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Missing required param:
+                    public"}
+        '500':
+          $ref: '#/components/responses/500'
+  /trips/{trip_id}:
+    put:
+      tags:
+        - Trips
+      summary: Update trip by its id
+      parameters:
+        - in: path
+          name: trip_id
+          schema:
+            type: string
+          required: true
+          description: ID of the trip to update
+        - name: public
+          in: query
+          schema:
+            type: string
+          required: true
+          description: Specifies whether the trip is public or not (0 or 1)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                driver_id:
+                  type: string
+                route_id:
+                  type: string
+                purpose:
+                  type: string
+                destination:
+                  type: string
+                type:
+                  type: string
+                vehicle_id:
+                  type: string
+                departure_time:
+                  type: string
+                applicant:
+                  type: string
+                faculty:
+                  type: string
+            examples:
+              '0':
+                value: "{ \r\n    \"purpose\": \"Updated purpose\"\r\n}"
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                'Missing Param':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide query param
+                    'public' (0 or 1)."}
+                'Missing ID':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '500':
+          $ref: '#/components/responses/500'
+    delete:
+      tags:
+        - Trips
+      summary: Delete trip by its id
+      parameters:
+        - in: path
+          name: trip_id
+          schema:
+            type: string
+          required: true
+          description: ID of the trip to delete
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                'Bad Request':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '500':
+          $ref: '#/components/responses/500'
+    get:
+      tags:
+        - Trips
+      summary: Get trip by its id
+      parameters:
+        - in: path
+          name: trip_id
+          schema:
+            type: string
+          required: true
+          description: ID of the trip to get
+      responses:
+        '200':
+          description: Auto generated using Swagger Inspector
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  trip_number:
+                    type: integer
+                  driver_id:
+                    type: string
+                  arrival_time:
+                    type: string
+                  user_id:
+                    type: string
+                  purpose:
+                    type: string
+                  vehicle_id:
+                    type: string
+                  departure_time:
+                    type: string
+                  applicant:
+                    type: string
+                  faculty:
+                    type: string
+                  updated_on:
+                    type: string
+                  created_on:
+                    type: string
+              examples:
+                'OK':
+                  value: >-
+                    {"trip_number":1,"id":"4de277ac-f535-46f2-8773-4202a58cb461","driver_id":"abc123","vehicle_id":"abc123","user_id":"abc123","applicant":"John","faculty":"Some
+                    Faculty","purpose":"Life has no
+                    purpose","departure_time":"2020-02-03T22:42:45.000Z","arrival_time":null,"updated_on":"2020-04-04T23:45:11.000Z","created_on":"2020-04-04T23:45:11.000Z"}
+        '400':
+          description: Auto generated using Swagger Inspector
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                'Bad Request':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                'Not Found':
+                  value: >-
+                    {"code":"NotFound","message":"Trip with id:
+                    5422013c-88a2-4632-9842-0720032bcaa6 not found"}
+        '500':
+          $ref: '#/components/responses/500'
+  /trips/active:
+    get:
+      tags:
+        - Trips
+      summary: Get all active public trips
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    id:
+                      type: string
+                    trip_number:
+                      type: integer
+                    vehicle_id:
+                      type: string
+                    departure_time:
+                      type: string
+                    capacity:
+                      type: integer
+                    property_number:
+                      type: integer
+                    handicap_enabled:
+                      type: boolean
+                    route_id:
+                      type: string
+                    route_name:
+                      type: string
+              examples:
+                '0':
+                  value: >-
+                    [{"id":"4de277ac-f535-46f2-8773-4202a58cb461","trip_number":1,"vehicle_id":"abc123","departure_time":"2020-02-03T22:42:45.000Z","capacity":10,"property_number":24,"handicap_enabled":1,"route_id":"abc123","route_name":"Ruta
+                    Expreso Zoologico a Fisica"}]
+        '500':
+          $ref: '#/components/responses/500'
+  /trips/end-trip/{trip_id}:
+    put:
+      tags:
+        - Trips
+      summary: End trip
+      parameters:
+        - in: path
+          name: trip_id
+          schema:
+            type: string
+          required: true
+          description: ID of the trip to end
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                'Bad Request':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '500':
+          $ref: '#/components/responses/500'
+  /trips/{trip_id}/events:
+    post:
+      tags:
+        - Trips
+      summary: Create trip event
+      parameters:
+        - in: path
+          name: trip_id
+          schema:
+            type: string
+          required: true
+          description: ID of the trip
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [description, type]
+              properties:
+                description:
+                  type: string
+                type:
+                  type: string
+            examples:
+              'Body':
+                value: "{ \r\n    \"description\": \"test\",\r\n    \"type\": \"accidente\"\r\n}\r\n"
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                'Created':
+                  value: '{"message":"Trip event created!"}'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                'Missing param':
+                  value: >-
+                    {"code":"BadRequest","message":"Missing required param:
+                    type"}
+                'Bad Request':
+                  value: '{"code":"BadRequest","message":"Need to provide a trip ID."}'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                'Not Found':
+                  value: >-
+                    {"code":"NotFound","message":"Trip with id:
+                    4de277ac-f535-46f2-8773-4202a58cb4q1 not found"}
+        '500':
+          $ref: '#/components/responses/500'
+    get:
+      tags:
+        - Trips
+      summary: Get trip event
+      parameters:
+        - in: path
+          name: trip_id
+          schema:
+            type: string
+          required: true
+          description: ID of the trip
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    id:
+                      type: string
+                    trip_id:
+                      type: string
+                    description:
+                      type: string
+                    type:
+                      type: string
+                    updated_on:
+                      type: string
+                    created_on:
+                      type: string
+              examples:
+                'OK':
+                  value: >-
+                    [{"id":"871d8c53-1902-46ca-b9ce-7487b0b579da","trip_id":"4de277ac-f535-46f2-8773-4202a58cb461","description":"test","type":"accidente","updated_on":"2020-04-06T04:05:14.000Z","created_on":"2020-04-06T04:05:14.000Z"}]
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                'Bad Request':
+                  value: '{"code":"BadRequest","message":"Need to provide a trip ID."}'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                'Not Found':
+                  value: >-
+                    {"code":"NotFound","message":"Trip with id:
+                    4de277ac-f535-46f2-8773-4202a58cb46a not found"}
+        '500':
+          $ref: '#/components/responses/500'
+  /trips/{trip_id}/cancel:
+    put:
+      tags:
+        - Trips
+      summary: Edit trip cancellation
+      parameters:
+        - in: path
+          name: trip_id
+          schema:
+            type: string
+          required: true
+          description: ID of the trip to cancel
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                purpose:
+                  type: string
+            examples:
+              'Update Purpose':
+                value: |-
+                  {
+                      "purpose": "updated test"
+                  }
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                'Missing ID':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                'ID Not Found':
+                  value: '{"code":"NotFound","message":"Trip with id: 404 not found"}'
+        '500':
+          $ref: '#/components/responses/500'
+    post:
+      tags:
+        - Trips
+      summary: Cancel a trip
+      parameters:
+        - in: path
+          name: trip_id
+          schema:
+            type: string
+          required: true
+          description: ID of the trip to cancel
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                purpose:
+                  type: string
+            examples:
+              'Test':
+                value: |-
+                  {
+                      "purpose": "test"
+                  }
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                'Missing Body Param':
+                  value: >-
+                    {"code":"BadRequest","message":"Missing param in body: Need
+                    to provide 'purpose'."}
+                'Missing ID':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                'ID Not Found':
+                  value: '{"code":"NotFound","message":"Trip with id: 404 not found"}'
+        '500':
+          $ref: '#/components/responses/500'
+  /devices:
+    post:
+      tags:
+        - Devices
+      summary: Create device
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+            examples:
+              '0':
+                value: '{"name": "TestDevice"}'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  device_id:
+                    type: string
+                  otp:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"device_id":"8717ceb1-6976-4095-b8e6-9e0c37561b75","otp":"b75989"}
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: '{"code":"BadRequest","message":"Need to provide a name."}'
+        '500':
+          $ref: '#/components/responses/500'
+    get:
+      tags:
+        - Devices
+      summary: Get all devices
+      parameters:
+        - name: skip
+          in: query
+          schema:
+            type: string
+          description: Parameter for pagination
+        - name: limit
+          in: query
+          schema:
+            type: string
+          description: Parameter for pagination
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    imei:
+                      type: string
+                    created_on:
+                      type: string
+                    updated_on:
+                      type: string
+              examples:
+                '0':
+                  value: >-
+                    [{"id":"8717ceb1-6976-4095-b8e6-9e0c37561b75","imei":null,"name":"TestDevice","updated_on":"2020-03-23T03:24:54.000Z","created_on":"2020-03-23T03:24:54.000Z"}]
+                "1":
+                  value: []
+        '500':
+          $ref: '#/components/responses/500'
+  /devices/verify:
+    post:
+      tags:
+        - Devices
+      summary: Verify device
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [imei, otp]
+              properties:
+                imei:
+                  type: string
+                otp:
+                  type: string
+            examples:
+              '0':
+                value: |-
+                  {
+                      "imei": "5ef7cecc=",
+                      "otp": "5b84d4"
+                  }
+      responses:
+        '202':
+          description: Auto generated using Swagger Inspector
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: '{"message":"Device was succesfully verified."}'
+        '401':
+          description: Auto generated using Swagger Inspector
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: '{"message":"The one time password is not valid."}'
+        '500':
+          $ref: '#/components/responses/500'
+  /devices/search:
+    get:
+      tags:
+        - Devices
+      summary: Search for devices with the specified parameters
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+          description: Device name
+        - name: id
+          in: query
+          schema:
+            type: string
+          description: Device id
+        - name: imei
+          in: query
+          schema:
+            type: string
+          description: Device imei
+        - name: skip
+          in: query
+          schema:
+            type: string
+          description: Parameter for pagination
+        - name: limit
+          in: query
+          schema:
+            type: string
+          description: Parameter for pagination
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    imei:
+                      type: string
+                    created_on:
+                      type: string
+                    updated_on:
+                      type: string
+              examples:
+                '0':
+                  value: >-
+                    [{"id":"8717ceb1-6976-4095-b8e6-9e0c37561b75","imei":"5ef7cecc=","name":"TestDevice","updated_on":"2020-03-23T03:24:54.000Z","created_on":"2020-03-23T03:24:54.000Z"}]
+                '1':
+                  value: []
+        '500':
+          $ref: '#/components/responses/500'
+  /devices/{device_id}:
+    get:
+      tags:
+        - Devices
+      summary: Get device by its id
+      parameters:
+        - in: path
+          name: device_id
+          schema:
+            type: string
+          required: true
+          description: ID of the device to fetch
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  imei:
+                    type: string
+                  created_on:
+                    type: string
+                  updated_on:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"id":"8717ceb1-6976-4095-b8e6-9e0c37561b75","imei":"5ef7cecc=","name":"TestDevice","updated_on":"2020-03-23T03:24:54.000Z","created_on":"2020-03-23T03:24:54.000Z"}
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"NotFound","message":"Device with id:
+                    5422013c-88a2-4632-9842-0720032bcaa6 not found"}
+        '500':
+          $ref: '#/components/responses/500'
+  /drivers:
+    post:
+      tags:
+        - Drivers
+      summary: Create driver
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [license, full_name]
+              properties:
+                license:
+                  type: integer
+                full_name:
+                  type: string
+            examples:
+              '0':
+                value: "{ \r\n    \"full_name\": \"John Doe\",\r\n    \"license\": 321\r\n}"
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: string
+              examples:
+                '0':
+                  value: '"6be3d2f1-904f-440a-b604-f7efd3ebb906"'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Missing required param:
+                    license"}
+        '500':
+          $ref: '#/components/responses/500'
+    get:
+      tags:
+        - Drivers
+      summary: Get all drivers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    id:
+                      type: string
+                    full_name:
+                      type: string
+                    license:
+                      type: integer
+                    created_on:
+                      type: string
+                    updated_on:
+                      type: string
+              examples:
+                '0':
+                  value: >-
+                    [{"id":"1","full_name":"Test
+                    John","license":54321,"updated_on":"2020-01-21T00:27:10.000Z","created_on":"2020-01-21T00:27:10.000Z"}]
+        '500':
+          $ref: '#/components/responses/500'
+  /drivers/search:
+    get:
+      tags:
+        - Drivers
+      summary: Search for drivers with the specified parameters
+      parameters:
+        - name: license
+          in: query
+          schema:
+            type: string
+          description: Driver license number
+        - name: id
+          in: query
+          schema:
+            type: string
+          description: Driver id
+        - name: full_name
+          in: query
+          schema:
+            type: string
+          description: Driver full name
+        - name: skip
+          in: query
+          schema:
+            type: string
+          description: Parameter for pagination
+        - name: limit
+          in: query
+          schema:
+            type: string
+          description: Parameter for pagination
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    id:
+                      type: string
+                    full_name:
+                      type: string
+                    license:
+                      type: integer
+                    created_on:
+                      type: string
+                    updated_on:
+                      type: string
+              examples:
+                '0':
+                  value: >-
+                    [{"id":"1","full_name":"Test
+                    John","license":54321,"updated_on":"2020-01-21T00:27:10.000Z","created_on":"2020-01-21T00:27:10.000Z"}]
+                '1':
+                  value: []
+        '500':
+          $ref: '#/components/responses/500'
+  /drivers/{driver_id}:
+    get:
+      tags:
+        - Drivers
+      summary: Get driver by its id
+      parameters:
+        - in: path
+          name: driver_id
+          schema:
+            type: string
+          required: true
+          description: ID of the driver to fetch
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  license:
+                    type: integer
+                  full_name:
+                    type: string
+                  updated_on:
+                    type: string
+                  created_on:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"id":"1","full_name":"Test
+                    John","license":54321,"updated_on":"2020-01-21T00:27:10.000Z","created_on":"2020-01-21T00:27:10.000Z"}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: '{"code":"NotFound","message":"Driver with id: abc404 not found"}'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '500':
+          $ref: '#/components/responses/500'
+    put:
+      tags:
+        - Drivers
+      summary: Update driver by its id
+      parameters:
+        - in: path
+          name: driver_id
+          schema:
+            type: string
+          required: true
+          description: ID of the driver to update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                full_name:
+                  type: string
+                license:
+                  type: integer
+            examples:
+              '0':
+                value: "{ \r\n    \"license\": 123456\r\n}"
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '500':
+          $ref: '#/components/responses/500'
+
+    delete:
+      tags:
+        - Drivers
+      summary: Delete driver by its id
+      parameters:
+        - in: path
+          name: driver_id
+          schema:
+            type: string
+          required: true
+          description: ID of the driver to delete
+      responses:
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '204':
+          description: No Content
+        '500':
+          $ref: '#/components/responses/500'
+  /vehicles:
+    post:
+      tags:
+        - Vehicles
+      summary: Create a vehicle
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [property_number, ownership, mileage, handicap_enabled, plate, model, brand, capacity]
+              properties:
+                property_number:
+                  type: integer
+                ownership:
+                  type: string
+                mileage:
+                  type: integer
+                handicap_enabled:
+                  type: boolean
+                plate:
+                  type: string
+                model:
+                  type: string
+                brand:
+                  type: string
+                capacity:
+                  type: integer
+            examples:
+              '0':
+                value: "{ \r\n    \"property_number\": 10,\r\n    \"plate\": \"ABC123\",\r\n    \"model\": \"Corolla\", \r\n    \"brand\": \"Toyota\",\r\n    \"capacity\": 10, \r\n    \"handicap_enabled\": false, \r\n    \"mileage\": 40000,\r\n    \"ownership\": \"Tests\"\r\n    \r\n}"
+      responses:
+        '201':
+          description: Created succesfully
+          content:
+            application/json:
+              schema:
+                type: string
+              examples:
+                '0':
+                  value: '"7da6943c-8ec0-4726-9168-40dd4b539af7"'
+        '400':
+          description: Bad request, missing required request body field
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Missing required param:
+                    property_number"}
+        '500':
+          $ref: '#/components/responses/500'
+    get:
+      tags:
+        - Vehicles
+      summary: Get all vehicles
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    id:
+                      type: string
+                    property_number:
+                      type: integer
+                    ownership:
+                      type: string
+                    mileage:
+                      type: integer
+                    handicap_enabled:
+                      type: integer
+                    plate:
+                      type: string
+                    model:
+                      type: string
+                    brand:
+                      type: string
+                    capacity:
+                      type: integer
+                    created_on:
+                      type: string
+                    updated_on:
+                      type: string
+              examples:
+                '0':
+                  value: >-
+                    [{"id":"7da6943c-8ec0-4726-9168-40dd4b539af7","property_number":10,"plate":"ABC123","model":"Corolla","brand":"Toyota","capacity":10,"handicap_enabled":0,"mileage":40000,"ownership":"Tests","updated_on":"2020-03-22T01:14:11.000Z","created_on":"2020-03-22T01:14:11.000Z"}]
+                '1':
+                  value: >-
+                    []
+        '500':
+          $ref: '#/components/responses/500'
+  /vehicles/{vehicle_id}:
+    get:
+      tags:
+        - Vehicles
+      summary: Get vehicle by its id
+      parameters:
+        - in: path
+          name: vehicle_id
+          schema:
+            type: string
+          required: true
+          description: ID of the vehicle to get
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  property_number:
+                    type: integer
+                  ownership:
+                    type: string
+                  mileage:
+                    type: integer
+                  handicap_enabled:
+                    type: integer
+                  plate:
+                    type: string
+                  model:
+                    type: string
+                  brand:
+                    type: string
+                  capacity:
+                    type: integer
+                  created_on:
+                    type: string
+                  updated_on:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"id":"7da6943c-8ec0-4726-9168-40dd4b539af7","property_number":10,"plate":"ABC123","model":"Corolla","brand":"Toyota","capacity":10,"handicap_enabled":0,"mileage":40000,"ownership":"Tests","updated_on":"2020-03-22T01:14:11.000Z","created_on":"2020-03-22T01:14:11.000Z"}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"NotFound","message":"Driver with id:
+                    5422013c-88a2-4632-9842-0720032bcaa6 not found"}
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '500':
+          $ref: '#/components/responses/500'
+    delete:
+      tags:
+        - Vehicles
+      parameters:
+        - in: path
+          name: vehicle_id
+          schema:
+            type: string
+          required: true
+          description: ID of the vehicle to delete
+      summary: Delete vehicle by its id
+      responses:
+        '204':
+          description: No content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to look for."}
+        '500':
+          $ref: '#/components/responses/500'
+    put:
+      tags:
+        - Vehicles
+      summary: Update vehicle by its id
+      parameters:
+        - in: path
+          name: vehicle_id
+          schema:
+            type: string
+          required: true
+          description: ID of the vehicle to update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                property_number:
+                  type: integer
+                ownership:
+                  type: string
+                mileage:
+                  type: integer
+                handicap_enabled:
+                  type: boolean
+                plate:
+                  type: string
+                model:
+                  type: string
+                brand:
+                  type: string
+                capacity:
+                  type: integer
+            examples:
+              '0':
+                value: "{ \r\n    \"model\": \"Model S\", \r\n    \"brand\": \"Tesla\"\r\n}"
+      responses:
+        '204':
+          description: No content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '500':
+          $ref: '#/components/responses/500'
+  /vehicles/search:
+    get:
+      tags:
+        - Vehicles
+      description: Filter vehicles specifying any combination of query parameters
+      summary: Search vehicles with the specified parameters
+      parameters:
+        - name: ownership
+          in: query
+          schema:
+            type: string
+          description: Vehicle owner
+        - name: property_number
+          in: query
+          schema:
+            type: string
+          description: Vehicle property number
+        - name: plate
+          in: query
+          schema:
+            type: string
+          description: Vehicle plate
+        - name: model
+          in: query
+          schema:
+            type: string
+          description: Vehicle brand model
+        - name: brand
+          in: query
+          schema:
+            type: string
+          description: Vehicle brand
+        - name: capacity
+          in: query
+          schema:
+            type: string
+          description: Vehicle capacity
+        - name: handicap_enabled
+          in: query
+          schema:
+            type: string
+          description: Boolean that specifies if the vehicle is handicap enabled
+        - name: mileage
+          in: query
+          schema:
+            type: string
+          description: Vehicle mileage
+        - name: id
+          in: query
+          schema:
+            type: string
+          description: Vehicle id
+        - name: skip
+          in: query
+          schema:
+            type: string
+          description: Parameter for pagination
+        - name: limit
+          in: query
+          schema:
+            type: string
+          description: Parameter for pagination
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    id:
+                      type: string
+                    property_number:
+                      type: integer
+                    ownership:
+                      type: string
+                    mileage:
+                      type: integer
+                    handicap_enabled:
+                      type: integer
+                    plate:
+                      type: string
+                    model:
+                      type: string
+                    brand:
+                      type: string
+                    capacity:
+                      type: integer
+                    created_on:
+                      type: string
+                    updated_on:
+                      type: string
+              examples:
+                '0':
+                  value: >-
+                    [{"id":"7da6943c-8ec0-4726-9168-40dd4b539af7","property_number":10,"plate":"ABC123","model":"Model
+                    S","brand":"Tesla","capacity":10,"handicap_enabled":0,"mileage":40000,"ownership":"Tests","updated_on":"2020-03-22T01:26:35.000Z","created_on":"2020-03-22T01:14:11.000Z"}, {"id":"1236943f-jnc0-4123-1968-40dd4b539af7","property_number":120,"plate":"ABH123","model":"Corolla","brand":"Toyota","capacity":10,"handicap_enabled":1,"mileage":80000,"ownership":"Tests","updated_on":"2020-03-22T01:26:35.000Z","created_on":"2020-03-22T01:14:11.000Z"}]
+                '1':
+                  value: >-
+                    []
+        '500':
+          $ref: '#/components/responses/500'
+  /vehicles/{vehicle_id}/vehicle_maintenance:
+    post:
+      tags:
+        - Vehicles
+      parameters:
+        - in: path
+          name: vehicle_id
+          schema:
+            type: string
+          required: true
+          description: ID of the vehicle that was in maintenance
+      summary: Create a maintenance record for the specified vehicle
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required: [cost, user_id, details, mileage, inspector, type, maintenance_date]
+              type: object
+              properties:
+                cost:
+                  type: number
+                user_id:
+                  type: string
+                details:
+                  type: string
+                inspector:
+                  type: string
+                maintenance_date:
+                  type: string
+                type:
+                  type: string
+                mileage:
+                  type: integer
+            examples:
+              '0':
+                value: "{\r\n  \"user_id\": \"7da6943c-8ec0-4726-9168-40dd4b539af7\",\r\n  \"inspector\": \"Juan Test\",\r\n  \"cost\": 500.0,\r\n  \"mileage\": 130000,\r\n  \"details\": \"Broken parts\",\r\n  \"maintenance_date\": \"2019-03-05\",\r\n  \"type\": \"Fixes\"\r\n}"
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: string
+              examples:
+                '0':
+                  value: '"f2c97a48-8c98-4468-a958-5a5ecedd8bb7"'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide a vehicle
+                    ID."}
+                '1':
+                  value: >-
+                    {"code":"BadRequest","message":"Missing required param:
+                    user_id"}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"NotFound","message":"Vehicle with id:
+                    48a50fdb-9a2e-45f5-a0fa not found"}
+        '500':
+          $ref: '#/components/responses/500'
+    get:
+      tags:
+        - Vehicles
+      parameters:
+        - in: path
+          name: vehicle_id
+          schema:
+            type: string
+          required: true
+          description: ID of the vehicle that was in maintenance
+      summary: Get all maintenance records for the specified vehicle
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    cost:
+                      type: number
+                    user_id:
+                      type: string
+                    details:
+                      type: string
+                    inspector:
+                      type: string
+                    maintenance_date:
+                      type: string
+                    type:
+                      type: string
+                    mileage:
+                      type: integer
+                    created_on:
+                      type: string
+              examples:
+                '0':
+                  value: >-
+                    [{"id":"83647f94-68bd-4d54-bf16-1a626a8a7cf1","user_id":"1","vehicle_id":"48a50fdb-9a2e-45f5-a0fa-57515155fcd9","mileage":130000,"type":"Arreglos","cost":500,"details":"Se
+                    rompieron piezas","inspector":"Juan
+                    Test","maintenance_date":"2019-03-05T00:00:00.000Z","created_on":"2020-03-22T21:27:53.000Z"},{"id":"abcd7a48-8c98-4468-a958-5a5ecedd8bb7","user_id":"1234","vehicle_id":"48a50fdb-9a2e-45f5-a0fa-57515155fcd9","mileage":130000,"type":"Arreglos","cost":500,"details":"Se
+                    rompieron piezas","inspector":"Juan
+                    Test","maintenance_date":"2019-03-05T00:00:00.000Z","created_on":"2020-03-22T21:29:38.000Z"}]
+                '1':
+                  value: >-
+                    []
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide a vehicle
+                    ID."}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"NotFound","message":"Vehicle with id:
+                    48a50fdb-9a2e-45f5 not found"}
+        '500':
+          $ref: '#/components/responses/500'
+  /vehicles/vehicle_maintenance/{maintenance_id}:
+    put:
+      tags:
+        - Vehicles
+      summary: Update a vehicle maintenance record
+      parameters:
+        - in: path
+          name: maintenance_id
+          schema:
+            type: string
+          required: true
+          description: ID of the vehicle maintenance record
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cost:
+                  type: number
+                user_id:
+                  type: string
+                details:
+                  type: string
+                inspector:
+                  type: string
+                maintenance_date:
+                  type: string
+                type:
+                  type: string
+                mileage:
+                  type: integer
+            examples:
+              '0':
+                value: |-
+                  {
+                      "cost": 1000
+                  }
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '500':
+          $ref: '#/components/responses/500'
+  /vehicles/{vehicle_id}/vehicle_usages:
+    get:
+      tags:
+        - Vehicles
+      summary: Get all usages records for the specified vehicle
+      parameters:
+        - in: path
+          name: vehicle_id
+          schema:
+            type: string
+          required: true
+          description: ID of the vehicle
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cost:
+                    type: number
+                  user_id:
+                    type: string
+                  details:
+                    type: string
+                  inspector:
+                    type: string
+                  maintenance_date:
+                    type: string
+                  type:
+                    type: string
+                  mileage:
+                    type: integer
+                  updated_on:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    [{"trip_id":"1","end_mileage_system":100000,"start_mileage":98000,"end_mileage":101000,"start_gas":100,"end_gas":20,"gas_expense":40,"updated_on":"2020-03-22T22:55:00.000Z"}]
+                '1':
+                  value: []
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: '{"code":"NotFound","message":"Vehicle with id: 123abc not found"}'
+        '500':
+          $ref: '#/components/responses/500'
+  /vehicles/vehicle_usages/{trip_id}:
+    get:
+      tags:
+        - Vehicles
+      parameters:
+        - in: path
+          name: trip_id
+          schema:
+            type: string
+          required: true
+          description: ID of the vehicle usage record
+      summary: Get vehicle usage of a trip
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cost:
+                    type: number
+                  user_id:
+                    type: string
+                  details:
+                    type: string
+                  inspector:
+                    type: string
+                  maintenance_date:
+                    type: string
+                  type:
+                    type: string
+                  mileage:
+                    type: integer
+                  updated_on:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"trip_id":"1","end_mileage_system":100000,"start_mileage":98000,"end_mileage":101000,"start_gas":100,"end_gas":20,"gas_expense":40,"updated_on":"2020-03-22T22:55:00.000Z"}
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: '{"code":"NotFound","message":"Trip with id: abc123 not found"}'
+        '500':
+          $ref: '#/components/responses/500'
+    put:
+      tags:
+        - Vehicles
+      parameters:
+        - in: path
+          name: trip_id
+          schema:
+            type: string
+          required: true
+          description: ID of the vehicle usage record
+      summary: Update vehicle usage of a trip
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                start_mileage:
+                  type: integer
+                end_mileage:
+                  type: integer
+                start_gas:
+                  type: integer
+                end_gas:
+                  type: integer
+                gas_expense:
+                  type: integer
+            examples:
+              '0':
+                value: |-
+                  {
+                      "gas_expense": 60
+                  }
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '0':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '500':
+          $ref: '#/components/responses/500'
+  /routes:
+    post:
+      tags:
+        - Routes
+      summary: Create route
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, description, stops]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                stops:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      lon:
+                        type: number
+                      lat:
+                        type: number
+                      name:
+                        type: string
+            examples:
+              '0':
+                value: "{\n    \"name\": \"Route 1\",\n    \"description\": \"This is a testing route.\",\t\n    \"stops\": [\n        {\n            \"lon\": -67.133728,\n            \"lat\": 18.215803,\n            \"name\": \"Stop 1\"\n        },\n        {\n            \"lon\": -67.1396338,\n            \"lat\": 18.2108147,\n            \"name\": \"Stop 2\"\n        }\n    ]\n}"
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  route_id:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '/routes':
+                  value: >-
+                    {"message":"TripRoute was successfully
+                    created!","route_id":"27eb6110-b9b6-4dc3-8bb5-4aa13cb3fd91"}
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '/routes':
+                  value: >-
+                    {"code":"BadRequest","message":"Missing required param:
+                    name"}
+        '500':
+          $ref: '#/components/responses/500'
+    get:
+      tags:
+        - Routes
+      summary: Get all routes
+      parameters:
+        - name: geojson
+          in: query
+          schema:
+            type: boolean
+          example: 'true'
+          description: Change the default geometry (polyline) to geopoints of all returned routes.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    description:
+                      type: string
+                    updated_on:
+                      type: string
+                    created_on:
+                      type: string
+                    geometry:
+                      type: string
+                    stops:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          lon:
+                            type: number
+                          lat:
+                            type: number
+              examples:
+                '/routes':
+                  value: >-
+                    [{"id":"b7cdc823-7106-469d-8ae3-41ed2f259f33","name":"Route 1","description":"This is a testing route.","updated_on":"2020-03-23T19:27:11.000Z","created_on":"2020-03-23T19:27:11.000Z","stops":[{"lon":-67.133728,"lat":18.215803},{"lon":-67.1396338,"lat":18.2108147}],"geometry":"oxdnBl`wxKS^~@lDh@~@ZNtCh@jAl@^h@RbBPf@j@p@vChAXR`AfCNTxD`Bj@q@~CrA{AdEzAeE_DsAk@p@yDaBOUaAgCYSwCiAk@q@Qg@ScB_@i@kAm@uCi@[Oi@_A_AmDR_@"}]
+                '/routes?geojson=true':
+                  value: >-
+                    [{"id":"b7cdc823-7106-469d-8ae3-41ed2f259f33","name":"Route 1","description":"This is a testing route.","updated_on":"2020-03-23T19:27:11.000Z","created_on":"2020-03-23T19:27:11.000Z","stops":[{"lon":-67.133728,"lat":18.215803},{"lon":-67.1396338,"lat":18.2108147}],"geometry":[[-67.133672,18.215916],[-67.133831,18.216019],[-67.134699,18.215696],[-67.135021,18.215492],[-67.135098,18.215348],[-67.135313,18.214599],[-67.135539,18.21422],[-67.13575,18.214058],[-67.136249,18.213964],[-67.136446,18.213868],[-67.136698,18.213646],[-67.137072,18.212885],[-67.137172,18.212762],[-67.137849,18.212433],[-67.137958,18.212346],[-67.13845,18.21142],[-67.1382,18.211199],[-67.138615,18.210396],[-67.139613,18.210856],[-67.138615,18.210396],[-67.1382,18.211199],[-67.13845,18.21142],[-67.137958,18.212346],[-67.137849,18.212433],[-67.137172,18.212762],[-67.137072,18.212885],[-67.136698,18.213646],[-67.136446,18.213868],[-67.136249,18.213964],[-67.13575,18.214058],[-67.135539,18.21422],[-67.135313,18.214599],[-67.135098,18.215348],[-67.135021,18.215492],[-67.134699,18.215696],[-67.133831,18.216019],[-67.133672,18.215916]]}]
+        '500':
+          $ref: '#/components/responses/500'
+  /routes/search:
+    get:
+      tags:
+        - Routes
+      description: Filter routes specifying any combination of query parameters.
+      summary: Search routes with the specified parameters
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: string
+          description: Route id.
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: Route name.
+        - in: query
+          name: description
+          schema:
+            type: string
+          description: Route description.
+        - in: query
+          name: geojson
+          schema:
+            type: boolean
+          example: 'true'
+          description: Change the default geometry (polyline) to geopoints of all the returned routes.
+        - in: query
+          name: stops
+          schema:
+            type: string
+          description: Filter routes that include the specified stop(s). Stop coordinates are separated by a comma (,) where the longitude is specified first and then the latitude (i.e. "/search?stops=[lon,lat]"). You can specify multiple stops by separating them by semicolon (;) (i.e. "/search?stops=[lon,lat];[lon,lat]..."). (e.g. "/search?stops=-67.133728,18.215803", "/search?stops=-67.133728,18.215803;-67.1396338,18.2108147...")
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    description:
+                      type: string
+                    geometry:
+                      type: string
+                    stops:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          lon:
+                            type: number
+                          lat:
+                            type: number
+              examples:
+                '/routes/search?name=Route 1':
+                  value: >-
+                    [{"id":"b7cdc823-7106-469d-8ae3-41ed2f259f33","name":"Route 1","description":"This is a testing route.","updated_on":"2020-03-23T19:27:11.000Z","created_on":"2020-03-23T19:27:11.000Z","stops":[{"lon":-67.133728,"lat":18.215803},{"lon":-67.1396338,"lat":18.2108147}],"geometry":"oxdnBl`wxKS^~@lDh@~@ZNtCh@jAl@^h@RbBPf@j@p@vChAXR`AfCNTxD`Bj@q@~CrA{AdEzAeE_DsAk@p@yDaBOUaAgCYSwCiAk@q@Qg@ScB_@i@kAm@uCi@[Oi@_A_AmDR_@"}]
+                '/routes/search?name=Route 1&geojson=true':
+                  value: >-
+                    [{"id":"b7cdc823-7106-469d-8ae3-41ed2f259f33","name":"Route 1","description":"This is a testing route.","updated_on":"2020-03-23T19:27:11.000Z","created_on":"2020-03-23T19:27:11.000Z","stops":[{"lon":-67.133728,"lat":18.215803},{"lon":-67.1396338,"lat":18.2108147}],"geometry":[[-67.133672,18.215916],[-67.133831,18.216019],[-67.134699,18.215696],[-67.135021,18.215492],[-67.135098,18.215348],[-67.135313,18.214599],[-67.135539,18.21422],[-67.13575,18.214058],[-67.136249,18.213964],[-67.136446,18.213868],[-67.136698,18.213646],[-67.137072,18.212885],[-67.137172,18.212762],[-67.137849,18.212433],[-67.137958,18.212346],[-67.13845,18.21142],[-67.1382,18.211199],[-67.138615,18.210396],[-67.139613,18.210856],[-67.138615,18.210396],[-67.1382,18.211199],[-67.13845,18.21142],[-67.137958,18.212346],[-67.137849,18.212433],[-67.137172,18.212762],[-67.137072,18.212885],[-67.136698,18.213646],[-67.136446,18.213868],[-67.136249,18.213964],[-67.13575,18.214058],[-67.135539,18.21422],[-67.135313,18.214599],[-67.135098,18.215348],[-67.135021,18.215492],[-67.134699,18.215696],[-67.133831,18.216019],[-67.133672,18.215916]]}]
+        '500':
+          $ref: '#/components/responses/500'
+  /routes/{route_id}:
+    get:
+      tags:
+        - Routes
+      parameters:
+        - in: path
+          name: route_id
+          schema:
+            type: string
+          required: true
+          description: ID of the route to fetch.
+        - name: geojson
+          in: query
+          schema:
+            type: boolean
+          example: 'true'
+          description: Change the default geometry (polyline) to geopoints of the returned route.
+      summary: Get route
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  updated_on:
+                    type: string
+                  created_on:
+                    type: string
+                  geometry:
+                    type: string
+                  stops:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        lon:
+                          type: number
+                        lat:
+                          type: number
+              examples:
+                '/routes/{route_id}':
+                  value: >-
+                    {"id":"b7cdc823-7106-469d-8ae3-41ed2f259f33","name":"Route 1","description":"This is a testing route.","updated_on":"2020-03-23T19:27:11.000Z","created_on":"2020-03-23T19:27:11.000Z","stops":[{"lon":-67.133728,"lat":18.215803},{"lon":-67.1396338,"lat":18.2108147}],"geometry":"oxdnBl`wxKS^~@lDh@~@ZNtCh@jAl@^h@RbBPf@j@p@vChAXR`AfCNTxD`Bj@q@~CrA{AdEzAeE_DsAk@p@yDaBOUaAgCYSwCiAk@q@Qg@ScB_@i@kAm@uCi@[Oi@_A_AmDR_@"}
+                '/routes/{route_id}?geojson=true':
+                  value: >-
+                    {"id":"b7cdc823-7106-469d-8ae3-41ed2f259f33","name":"Route 1","description":"This is a testing route.","updated_on":"2020-03-23T19:27:11.000Z","created_on":"2020-03-23T19:27:11.000Z","stops":[{"lon":-67.133728,"lat":18.215803},{"lon":-67.1396338,"lat":18.2108147}],"geometry":[[-67.133672,18.215916],[-67.133831,18.216019],[-67.134699,18.215696],[-67.135021,18.215492],[-67.135098,18.215348],[-67.135313,18.214599],[-67.135539,18.21422],[-67.13575,18.214058],[-67.136249,18.213964],[-67.136446,18.213868],[-67.136698,18.213646],[-67.137072,18.212885],[-67.137172,18.212762],[-67.137849,18.212433],[-67.137958,18.212346],[-67.13845,18.21142],[-67.1382,18.211199],[-67.138615,18.210396],[-67.139613,18.210856],[-67.138615,18.210396],[-67.1382,18.211199],[-67.13845,18.21142],[-67.137958,18.212346],[-67.137849,18.212433],[-67.137172,18.212762],[-67.137072,18.212885],[-67.136698,18.213646],[-67.136446,18.213868],[-67.136249,18.213964],[-67.13575,18.214058],[-67.135539,18.21422],[-67.135313,18.214599],[-67.135098,18.215348],[-67.135021,18.215492],[-67.134699,18.215696],[-67.133831,18.216019],[-67.133672,18.215916]]}
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '/routes/':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '/routes/{route_id}':
+                  value: >-
+                    {"code":"NotFound","message":"TripRoute with id
+                    a1b2c3d4-e5f6g7h8 not found."}
+        '500':
+          $ref: '#/components/responses/500'
+    put:
+      tags:
+        - Routes
+      summary: Update route by its id
+      parameters:
+        - in: path
+          name: route_id
+          schema:
+            type: string
+          required: true
+          description: ID of the route to update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                stops:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      lon:
+                        type: number
+                      lat:
+                        type: number
+                      name:
+                        type: string
+            examples:
+              '0':
+                value: "{\n    \"name\": \"Other name\",\t\n    \"stops\": [\n        {\n            \"lon\": -67.141934,\n            \"lat\": 18.211754\n        },\n        {\n            \"lon\": -67.139084,\n            \"lat\": 18.209623\n        }\n    ]\n}"
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '/routes/':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '500':
+          $ref: '#/components/responses/500'
+    delete:
+      tags:
+        - Routes
+      summary: Delete route by its id
+      parameters:
+        - in: path
+          name: route_id
+          schema:
+            type: string
+          required: true
+          description: ID of the route to delete
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '/routes/':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide an ID to
+                    look for."}
+        '500':
+          $ref: '#/components/responses/500'
+  /stops:
+    post:
+      tags:
+        - Stops
+      summary: Create stops
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, lat, lon]
+              properties:
+                name:
+                  type: string
+                lat:
+                  type: number
+                lon:
+                  type: number
+            examples:
+              'valid':
+                value: |-
+                  {
+                      "name": "Física",
+                      "lat": 18.210986,
+                      "lon": -67.139702
+                  }
+              'non-valid':
+                value:  "{\r\n    \"name\": \"Terrace\",\r\n    \"lat\": -70.25328\r\n}"
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  stop_name:
+                    type: string
+              examples:
+                '/stops':
+                  value: >-
+                    {"message":"Stop was successfully
+                    created!","stop_name":"Física"}
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '/stops':
+                  value: >-
+                    {"code":"BadRequest","message":"Missing required param:
+                    lon"}
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '/stops':
+                  value: >-
+                    {"code":"Conflict","message":"This stop already exists. To
+                    properly change the contents of this stop, use the update
+                    route instead (PUT)."}
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '/stops':
+                  value: '{"code":"InternalServer","message":"An internal server error ocurred"}'
+    get:
+      tags:
+        - Stops
+      summary: Get all stops
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    lat:
+                      type: number
+                    lon:
+                      type: number
+              examples:
+                '/stops':
+                  value: >-
+                    [{"name":"Física","lon":-67.139702,"lat":18.210986},{"name":"Biblioteca","lat":90.45728,"lon":-32.76395}]
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '/stops':
+                  value: '{"code":"InternalServer","message":"An internal server error ocurred"}'
+  /stops/search:
+    get:
+      tags:
+        - Stops
+      summary: Search stops with the specified parameters
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: Stop name.
+        - in: query
+          name: lat
+          schema:
+            type: number
+          description: Stop latitude.
+        - in: query
+          name: lon
+          schema:
+            type: number
+          description: Stop longitude.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    lat:
+                      type: number
+                    lon:
+                      type: number
+              examples:
+                '/stops/search?lon=-67.139702':
+                  value: '[{"name":"Física","lon":-67.139702,"lat":18.210986}]'
+                '/stops/search?name=Biblioteca':
+                  value: '[{"name":"Biblioteca","lon":-32.76395,"lat":90.45728}]'
+                '/stops/search':
+                  value: '[]'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '/stops/search':
+                  value: '{"code":"InternalServer","message":"An internal server error ocurred"}'
+  /stops/{lat}/{lon}:
+    get:
+      tags:
+        - Stops
+      parameters:
+        - in: path
+          name: lat
+          schema:
+            type: number
+          required: true
+          description: Latitude of the stop to fetch.
+        - in: path
+          name: lon
+          schema:
+            type: number
+          required: true
+          description: Longitude of the stop to fetch.
+      summary: Get stop by its id (lat and lon)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  lat:
+                    type: number
+                  lon:
+                    type: number
+              examples:
+                '/stops/18.210986/-67.139702':
+                  value: '{"name":"Física","lon":-67.139702,"lat":18.210986}'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '/stops//':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide both
+                    coordinates (lat, lon) as numeric values."}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '/stops/100/100':
+                  value: >-
+                    {"code":"NotFound","message":"Stop with lat=100 and lon=100
+                    was not found."}
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '/stops/18.210986/-67.139702':
+                  value: '{"code":"InternalServer","message":"An internal server error ocurred"}'
+    put:
+      tags:
+        - Stops
+      summary: Update stop by its id (lat and lon)
+      parameters:
+        - in: path
+          name: lat
+          schema:
+            type: number
+          required: true
+          description: Latitude of the stop to fetch.
+        - in: path
+          name: lon
+          schema:
+            type: number
+          required: true
+          description: Longitude of the stop to fetch.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+            examples:
+              'valid':
+                value: |-
+                  {
+                      "name": "Terrace"
+                  }
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '/stops//':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide both
+                    coordinates (lat, lon) as numeric values."}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '/stops/100/100':
+                  value: >-
+                    {"code":"NotFound","message":"Stop with lat=100 and lon=100
+                    was not found."}
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '/stops/18.210986/-67.139702':
+                  value: '{"code":"InternalServer","message":"An internal server error ocurred"}'
+    delete:
+      tags:
+        - Stops
+      summary: Delete stop by its id (lat and lon)
+      parameters:
+        - in: path
+          name: lat
+          schema:
+            type: number
+          required: true
+          description: Latitude of the stop to fetch.
+        - in: path
+          name: lon
+          schema:
+            type: number
+          required: true
+          description: Longitude of the stop to fetch.
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '/stops/18.210986/-67.139702':
+                  value: >-
+                    {"code":"BadRequest","message":"Need to provide both
+                    coordinates (lat, lon) as numeric values."}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '/stops/100/100':
+                  value: >-
+                    {"code":"NotFound","message":"Stop with lat=100 and lon=100
+                    was not found."}
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              examples:
+                '/stops/18.210986/-67.139702':
+                  value: '{"code":"InternalServer","message":"An internal server error ocurred"}'
+
+components:
+  responses:
+    500:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              message:
+                type: string
+          examples:
+            'Server Error':
+              value: '{"code":"InternalServer","message":"An internal server error ocurred"}'

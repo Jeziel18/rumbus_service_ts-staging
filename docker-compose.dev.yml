@@ -1,0 +1,138 @@
+version: '3.7'
+services:
+  web:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.dev
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./package.json:/code/package.json
+      - ./src:/code/src
+    environment:
+      - NODE_ENV=localContainer
+      - PORT=8081
+      - db_database=rumbus_mdb_dev
+      - db_host=rdbms
+      - db_password=uprm_password
+      - db_user=rumbus_api
+      - dynamo_accessKeyID=0
+      - dynamo_endpoint=http://dynamodb:8000
+      - dynamo_region=us-east-2
+      - dynamo_secretAccessKey=0
+
+  rdbms:
+    environment:
+      - MARIADB_ROOT_PASSWORD=04MyR00tne33!
+      - MARIADB_USER=rumbus_api
+      - MARIADB_PASSWORD=uprm_password
+      - MARIADB_DATABASE=rumbus_mdb_dev
+    image: mariadb:10.4
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./docker-utils/AppDBInit.sql:/docker-entrypoint-initdb.d/AppDatabase.sql
+
+  new_rdbms:
+    environment:
+      - MARIADB_ROOT_PASSWORD=04MyR00tne33!
+      - MARIADB_USER=rumbus_api
+      - MARIADB_PASSWORD=uprm_password
+      - MARIADB_DATABASE=rumbus_mdb_dev_new
+    image: mariadb:10.4
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./docker-utils/newAppDBInit.sql:/docker-entrypoint-initdb.d/AppDatabase.sql
+
+  dynamodb:
+    image: amazon/dynamodb-local
+    ports:
+      - "8000:8000"
+    environment:
+      - AWS_ACCESS_KEY_ID=0
+      - AWS_SECRET_ACCESS_KEY=0
+      - AWS_DEFAULT_REGION=us-east-2
+
+  init-dynamo:
+    image: garland/aws-cli-docker
+    command: "sh /etc/dynamoInit.sh"
+    volumes:
+      - ./docker-utils/dynamoInit.sh:/etc/dynamoInit.sh
+    environment:
+      - AWS_ACCESS_KEY_ID=0
+      - AWS_SECRET_ACCESS_KEY=0
+      - AWS_DEFAULT_REGION=us-east-2
+
+  osrm-backend:
+    image: osrm/osrm-backend:v5.22.0
+    command: "osrm-routed --algorithm ch /data/puerto-rico-latest.osrm"
+    volumes:
+      - ./maps:/data
+    ports:
+      - "5000:5000"
+
+  mqtt-broker:
+    image: emqx/emqx:4.3-rc.5
+    ports:
+      - 1883:1883   # MQTT TCP port
+      - 8883:8883   # MQTT TCP TLS/SSL port
+      - 8083:8083   # HTTP and WebSocket port
+      - 8084:8084   # HTTPS and WSS port
+      - 4369:4369
+      - 18083:18083 # dashboard
+    environment:
+      - EMQX_NAME=node1-emqx
+      - EMQX_HOST=127.0.0.1
+      - EMQX_LOADED_PLUGINS=emqx_recon,emqx_retainer,emqx_management,emqx_dashboard,emqx_auth_mnesia
+      - EMQX_ALLOW_ANONYMOUS=false
+      - EMQX_AUTH__USER__1__USERNAME=rumbus
+      - EMQX_AUTH__USER__1__PASSWORD=secret_pwd
+      - EMQX_AUTH__USER__2__USERNAME=client
+      - EMQX_AUTH__USER__2__PASSWORD=secret_pwd
+    volumes:
+      - vol-emqx-data:/opt/emqx/data
+      - vol-emqx-etc:/opt/emqx/etc
+      - vol-emqx-log:/opt/emqx/log
+
+#  apm-server:
+#    image: store/elastic/apm-server:7.5.1
+#    user: apm-server
+#    ports:
+#      - "7200:7200"
+#    depends_on: ["elasticsearch", "kibana"]
+#    command: apm-server -e -c /usr/share/apm-server/apm-server.yml -E apm-server.host=apm-server:7200 --strict.perms=false
+#    volumes:
+#      - ./docker-utils/apm-server.yml:/usr/share/apm-server/apm-server.yml
+#    healthcheck:
+#      test: ["CMD", "curl", "-s", "-f", "http://localhost:7200/polls"]
+#
+#  elasticsearch:
+#    image: elasticsearch:7.5.1
+#    environment:
+#      discovery.type: single-node
+#    ulimits:
+#      memlock:
+#        soft: -1
+#        hard: -1
+#    volumes:
+#      - esdata:/usr/share/elasticsearch/data
+#    ports:
+#      - "9200:9200"
+#      - "9300:9300"
+#    healthcheck:
+#      test: ["CMD", "curl", "-s", "-f", "http://localhost:9200/_cat/health"]
+#
+#  kibana:
+#    hostname: kibana
+#    image: kibana:7.5.1
+#    environment:
+#      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+#    ports: ['5601:5601']
+#    healthcheck:
+#      test: ["CMD", "curl", "-s", "-f", "http://localhost:5601/"]
+
+volumes:
+  vol-emqx-data:
+  vol-emqx-etc:
+  vol-emqx-log:

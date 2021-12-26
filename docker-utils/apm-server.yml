@@ -1,0 +1,6 @@
+apm-server:
+  hosts: ['apm-server:7200']
+output.elasticsearch:
+  hosts: ['elasticsearch:9200']
+setup.kibana:
+  host: 'kibana:5601'

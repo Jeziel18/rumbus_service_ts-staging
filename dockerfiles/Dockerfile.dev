@@ -1,0 +1,9 @@
+FROM node:12.7
+EXPOSE 8081
+
+WORKDIR /code
+COPY package.json .
+RUN yarn install
+COPY . .
+RUN yarn build-ts
+CMD yarn run watch

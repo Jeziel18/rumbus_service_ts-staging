@@ -1,0 +1,9 @@
+.git
+.gitignore
+.gitlab-ci.yml
+**Dockerfile**
+**docker-compose**
+node_modules/
+dist/
+.idea/
+.vscode/

@@ -1,0 +1,88 @@
+image: docker/compose
+
+# using repository environment variables in the CI environment
+variables:
+  # REPOSITORY_URL: $AWS_ECR_URL
+  # REGION: $AWS_REGION
+  CONTAINER_RELEASE_IMAGE_PROD: $CI_REGISTRY_IMAGE:prod-latest
+  CONTAINER_RELEASE_IMAGE_STAGING: $CI_REGISTRY_IMAGE:dev-latest
+  DOCKER_DRIVER: overlay
+  DOCS_FOLDER: "api-docs"
+  SPEC_TO_DISPLAY: "openAPI-specification.yml"
+
+services:
+- docker:dind
+
+before_script:
+    - docker info
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+stages:
+  - build
+  - test
+  - deploy
+
+build-production:
+  stage: build
+  script:
+    - echo "Building image..."
+    - docker build -f dockerfiles/Dockerfile.prod -t $CONTAINER_RELEASE_IMAGE_PROD .
+    - echo "Pushing image..."
+    - docker push $CONTAINER_RELEASE_IMAGE_PROD
+  only:
+    - master
+
+build-staging:
+  stage: build
+  script:
+    - echo "Building image..."
+    - docker build -f dockerfiles/Dockerfile.stage -t $CONTAINER_RELEASE_IMAGE_STAGING .
+    - echo "Pushing image..."
+    - docker push $CONTAINER_RELEASE_IMAGE_STAGING
+  only:
+    - staging
+
+test:
+  only:
+    - merge_requests
+  except:
+    variables:
+      - $CI_MERGE_REQUEST_TITLE =~ /^WIP:/
+  stage: test
+  script:
+    - docker-compose -f docker-compose.test.yml up --abort-on-container-exit --exit-code-from api_tests
+  after_script:
+    - docker-compose -f docker-compose.test.yml down
+
+pages:
+  stage: deploy
+  cache:
+    paths:
+      - ./node_modules
+  before_script:
+    - apk add --update nodejs npm
+    - npm install swagger-ui-dist@3.25.0
+  script:
+    - mkdir public
+    - cp -rp node_modules/swagger-ui-dist/* public
+    - cp -rp $DOCS_FOLDER/* public
+    - sed -i "s#https://petstore\.swagger\.io/v2/swagger\.json#$SPEC_TO_DISPLAY#g" public/index.html
+  artifacts:
+    paths:
+      - public
+  only:
+    - staging
+
+deploy-staging:
+  stage: deploy
+  script:
+    - echo "Logging in to Gitlab container registry"
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker pull $CONTAINER_RELEASE_IMAGE_STAGING
+    - docker tag $CONTAINER_RELEASE_IMAGE_STAGING registry.heroku.com/rumbus-staging-api/web:latest
+    - docker login --username=_ --password=$HEROKU_AUTH_TOKEN registry.heroku.com
+    - docker push registry.heroku.com/rumbus-staging-api/web:latest
+    - docker run --rm -e HEROKU_API_KEY=$HEROKU_API_KEY wingrunr21/alpine-heroku-cli container:release web --app rumbus-staging-api
+    - echo "App deployed in https://rumbus-staging-api.herokuapp.com/"
+  only:
+    - staging
